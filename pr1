@@ -1,0 +1,61 @@
+from __future__ import division
+from collections import Counter
+
+
+users = [{"id":0,"name":"Hero"},{"id":1,"name":"Jack"},{"id":2,"name":"Tom"},{"id":3,"name":"Miller"},{"id":4,"name":"Ujin"},]
+
+friendsships = [(0,1),(0,2),(1,2),(1,3),(2,4),(3,4),(1,4)]
+
+for user in users:
+    user["friends"] = [] #각 딕셔너리에 새로운 키값 friends 추가하고, 그 밸류로 리스트 추가.
+
+for i, j in friendsships: #i,j는 튜플의 각 값, 이때 i가 users의 id의 밸류와 같다.
+    users[i]["friends"].append(users[j]) #이렇게 하면 i는 자동으로 id값이 된다네?
+    users[j]["friends"].append(users[i])
+
+def num_of_friends(user):
+# user 의 친구는 몇명일까?, 위에 for문에서 정의한 user 객체를 대상으로 작동하는 함수니까 이렇게 하는듯.
+    return len(user["friends"])
+total_connections = sum(num_of_friends(user) for user in users)
+# 각 user의 친구 수를 알 수 있다 .그다음은 가장 많은 순, 적은 순으로 나열하는 것.
+
+def sth(p):
+    user["id"],num_of_friends = p
+    return num_of_friends
+
+
+num_users = len(user["friends"])
+avg_connections = total_connections / num_users
+
+#친구 많은 것에서 적은 순으로 정렬. user_id, num_of friends로 구성된 list 만들기
+num_friends_byid = [(user["id"], num_of_friends(user)) for user in users]
+
+sorted(num_friends_byid, key=lambda p : p[1], reverse=False)
+
+print(num_friends_byid)
+
+def friends_of_friend_ids_bad(user):
+    return [foaf["id"] # 리턴값은 foaf["id"] 인데 이게 뭐냐면, (동시에 foaf를 정의한 것임)
+            for friend in user["friends"]
+            for foaf in friend["friends"]]
+
+print(friends_of_friend_ids_bad(users[0]))
+# 이렇게 하면 자기 친구의 친구가 나오게 되는데, 자신도 친구의 친구에 포함이므로, 자기 자신은 2번 나온다.
+
+def not_the_same(user, other_user):
+# 만약에 두 사용자 id가 다르면 다른 사용자로 인식
+    return user["id"] != other_user["id"]
+
+def not_friends(user, other_user):
+# 만약 아더 유저가 user["friends"]에 포함 안되면 친구 아닌것으로 간주.
+# 즉 other_user를 not_the_same 함수 사용하여 user["friends"]에 포함된 사람과 다르다고 인식.
+    return all(not_the_same(friend, other_user) for friend in user["friends"])
+
+def friends_of_friend_ids(user):
+    return Counter(foaf["id"]
+                   for friend in user["friends"]
+                   for foaf in friend["friends"]
+                   if not_the_same(user,foaf)
+                   and not_friends(user,foaf))
+
+print (friends_of_friend_ids(users[0])) # Counter({4:2, 3:1}) 이렇게 나옴. 4와는 뮤츄얼 2명, 3과는 1명 의미.
